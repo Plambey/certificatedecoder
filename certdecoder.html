@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<!-- Written by Patrick Lambe @plambe -->
+<script type="text/javascript">
+	const certregex = / {1,}-----END CERTIFICATE-----/; //used to fix whitespacing at end of some certs from netlogs
+	var previousCertText = ""; //used to ensure we only request certs upon focus/key up if the cert has actually changed
+	function decodeCert () {
+	
+		//sends the cert to be decode via a HP function server side
+
+		var certificateToDecode = document.getElementById("certificateInput").value; //grabs the inputted cert from the text box
+		if (certificateToDecode != null && certificateToDecode != "" && certificateToDecode.length > 64 && certificateToDecode != previousCertText) //checks to ensure there is a cert before sending and its not an empty string, and also ensures its at least 64 characters long
+		{
+		certificateToDecode = sanitizeCert(certificateToDecode);
+		//prepares to send the cert to the server via XMLHttp
+		var xmlhttp = new XMLHttpRequest();
+		console.log(certificateToDecode);
+		xmlhttp.open("POST", "decoder.php"); //the php file we're using
+		xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    	xmlhttp.send("cert=" + encodeURIComponent(certificateToDecode));
+    	xmlhttp.onreadystatechange=function() {
+    	if (this.readyState==4 && this.status==200) {
+			//extract elements from json response sent by the server
+			var jsonResponse = JSON.parse(xmlhttp.response);
+			console.log(jsonResponse); //logs to the console for testing. can remove later		
+			var formattedString =""; //initializes the string to be updated
+			for (key in jsonResponse) //iterates through the json response and create a formatted response body to display to user
+			{
+				if (jsonResponse[key] != null && jsonResponse[key] !="" && jsonResponse[key] != ", ") //ensure we only display values returned and don't display empty values
+					{
+						formattedString += ("<b>" + key + ": </b>" + jsonResponse[key] + "<br>");
+					}
+			}
+			document.getElementById("phpDecodedCert").innerHTML = formattedString;
+        }
+    }
+    previousCertText = document.getElementById("certificateInput").value;
+    }
+}
+
+function sanitizeCert(stringtosanitize){
+	//checks to see if cert contains the initial required "begin cert", and adds necessary strings if not
+
+	if (stringtosanitize.includes("-----BEGIN CERTIFICATE-----")) //checks if it has the starting line required for a cert. if it doens't, it adds start and end
+		{	
+			console.log(stringtosanitize);
+			stringtosanitize = stringtosanitize.replace(certregex, '-----END CERTIFICATE-----');
+			console.log(stringtosanitize);
+			return stringtosanitize;
+			// if (stringtosanitize.includes("                                -----END CERTIFICATE-----")) //if the end is present, strips the erronously added whitespace when copying from a netlog
+			// 	{
+			// 		return stringtosanitize.replace("                                -----END CERTIFICATE-----", "-----END CERTIFICATE-----");
+			// }
+			// else return stringtosanitize; //if it doens't contain the whitespace, it returns it as is
+		}
+		else return "-----BEGIN CERTIFICATE-----"+"\n"+stringtosanitize+"\n"+"-----END CERTIFICATE-----"; //if it doesn't contain the required begin and end, it adds them and returns it
+}
+
+</script>
+<head>
+	<title>SSL Certificate Decoder</title>
+	<link rel="shortcut icon" href="https://a.slack-edge.com/production-standard-emoji-assets/10.2/apple-large/26a1@2x.png" type="image/x-icon"/>
+    <link rel="icon" href="https://a.slack-edge.com/production-standard-emoji-assets/10.2/apple-large/26a1@2x.png" type="image/ico"/>
+</head>
+
+<body>
+
+<div id=inputdiv style="float:left">
+	<h1> Paste your SSL Certificate</h1>
+	<form>
+		<div><textarea id="certificateInput" rows="30" cols="64" placeholder="Paste cert here..." onkeyup=decodeCert() onfocus=decodeCert()></textarea></div>
+	</form>
+</div>
+
+<div id="outputdiv" style="float:left; padding-left: 15px">
+	<h1>Decoded Cert</h1>
+	<div id="phpDecodedCert"></div>
+</div>
+
+<div style="position: fixed; bottom: 20px; margin-left:30%">Come see us in <a href="slack://channel?team=T5J4Q04QG&id=CPK6CH7BR">#ce-env-team</a> for any feedback, questions, and more!</div>
+
+</body>
+</html>
