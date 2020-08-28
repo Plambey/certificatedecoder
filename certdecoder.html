@@ -6,7 +6,7 @@
 	var previousCertText = ""; //used to ensure we only request certs upon focus/key up if the cert has actually changed
 	function decodeCert () {
 	
-		//sends the cert to be decode via a HP function server side
+		//sends the cert to be decode via a PHP function server side
 
 		var certificateToDecode = document.getElementById("certificateInput").value; //grabs the inputted cert from the text box
 		if (certificateToDecode != null && certificateToDecode != "" && certificateToDecode.length > 64 && certificateToDecode != previousCertText) //checks to ensure there is a cert before sending and its not an empty string, and also ensures its at least 64 characters long
