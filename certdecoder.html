@@ -6,7 +6,7 @@
 	var previousCertText = ""; //used to ensure we only request certs upon focus/key up if the cert has actually changed
 	function decodeCert () {
 	
-		//sends the cert to be decode via a PHP function server side
+		//this function sents the cert to be decoded via a PHP function server side
 
 		var certificateToDecode = document.getElementById("certificateInput").value; //grabs the inputted cert from the text box
 		if (certificateToDecode != null && certificateToDecode != "" && certificateToDecode.length > 64 && certificateToDecode != previousCertText) //checks to ensure there is a cert before sending and its not an empty string, and also ensures its at least 64 characters long
@@ -14,7 +14,6 @@
 		certificateToDecode = sanitizeCert(certificateToDecode);
 		//prepares to send the cert to the server via XMLHttp
 		var xmlhttp = new XMLHttpRequest();
-		console.log(certificateToDecode);
 		xmlhttp.open("POST", "decoder.php"); //the php file we're using
 		xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     	xmlhttp.send("cert=" + encodeURIComponent(certificateToDecode));
@@ -22,11 +21,11 @@
     	if (this.readyState==4 && this.status==200) {
 			//extract elements from json response sent by the server
 			var jsonResponse = JSON.parse(xmlhttp.response);
-			console.log(jsonResponse); //logs to the console for testing. can remove later		
 			var formattedString =""; //initializes the string to be updated
 			for (key in jsonResponse) //iterates through the json response and create a formatted response body to display to user
 			{
-				if (jsonResponse[key] != null && jsonResponse[key] !="" && jsonResponse[key] != ", ") //ensure we only display values returned and don't display empty values
+				if (jsonResponse[key] != null && jsonResponse[key] !="" && jsonResponse[key] != ", ") 
+				//ensure we only display values returned and don't display empty values
 					{
 						formattedString += ("<b>" + key + ": </b>" + jsonResponse[key] + "<br>");
 					}
@@ -43,17 +42,11 @@ function sanitizeCert(stringtosanitize){
 
 	if (stringtosanitize.includes("-----BEGIN CERTIFICATE-----")) //checks if it has the starting line required for a cert. if it doens't, it adds start and end
 		{	
-			console.log(stringtosanitize);
 			stringtosanitize = stringtosanitize.replace(certregex, '-----END CERTIFICATE-----');
-			console.log(stringtosanitize);
 			return stringtosanitize;
-			// if (stringtosanitize.includes("                                -----END CERTIFICATE-----")) //if the end is present, strips the erronously added whitespace when copying from a netlog
-			// 	{
-			// 		return stringtosanitize.replace("                                -----END CERTIFICATE-----", "-----END CERTIFICATE-----");
-			// }
-			// else return stringtosanitize; //if it doens't contain the whitespace, it returns it as is
 		}
-		else return "-----BEGIN CERTIFICATE-----"+"\n"+stringtosanitize+"\n"+"-----END CERTIFICATE-----"; //if it doesn't contain the required begin and end, it adds them and returns it
+		else return "-----BEGIN CERTIFICATE-----"+"\n"+stringtosanitize+"\n"+"-----END CERTIFICATE-----"; 
+		//if it doesn't contain the required begin and end, it adds them and returns it
 }
 
 </script>
